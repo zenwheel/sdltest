@@ -28,8 +28,12 @@ int main(int argc, char **argv) {
     }
   }
 
+	Uint32 flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+	if(argc > 1 && strcmp(argv[1], "-novsync"))
+		flags &= ~SDL_RENDERER_PRESENTVSYNC;
+
 	SDL_Window *window = SDL_CreateWindow(argv[0], SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, flags);
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_DisableScreenSaver();
@@ -55,7 +59,6 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Can't open font for stats: %s", TTF_GetError());
 		goto cleanup;
 	}
-
 
 	SDL_Event event;
 	SDL_bool m_run = SDL_TRUE;

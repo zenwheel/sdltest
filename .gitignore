@@ -1,3 +1,5 @@
 sdltest
 *.o
+core
+sdltest.core
 
