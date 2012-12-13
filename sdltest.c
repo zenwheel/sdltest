@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
 		SDL_RenderClear(renderer);
 
-		snprintf(tmp, sizeof(tmp), "%.1f fps", fps);
+		snprintf(tmp, sizeof(tmp), "Current fps = %.1f", fps);
 		SDL_Surface *textSurface = TTF_RenderText_Solid(font, tmp, foregroundColor);
 
 		if(textSurface) {
