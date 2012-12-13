@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
   SDL_DisplayMode current;
   int width = 800;
   int height = 600;
+  Uint32 frameRate = BASE_FRAME_RATE_MS;
   for(int i = 0; i < SDL_GetNumVideoDisplays(); ++i){
     if(SDL_GetCurrentDisplayMode(i, &current) != 0)
 			fprintf(stderr, "Couldn't get display mode: %s\n", SDL_GetError());
@@ -29,8 +30,14 @@ int main(int argc, char **argv) {
   }
 
 	Uint32 flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-	if(argc > 1 && strcmp(argv[1], "-novsync") == 0)
+	if(argc > 1 && strncmp(argv[1], "-novsync", 8) == 0) {
 		flags &= ~SDL_RENDERER_PRESENTVSYNC;
+		char *n = strchr(argv[1], '=');
+		if(n) {
+			n++;
+			frameRate = strtoul(n, 0, 0);
+		}
+	}
 
 	SDL_Window *window = SDL_CreateWindow(argv[0], SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, flags);
@@ -117,8 +124,8 @@ int main(int argc, char **argv) {
 		Uint32 elapsed = end - lastFrame;
 
 		// delay for the remainder of the base rate so we keep a decent frame rate if there's no vsync
-		if(vsync == SDL_FALSE && BASE_FRAME_RATE_MS > elapsed)
-			SDL_Delay(BASE_FRAME_RATE_MS - elapsed);
+		if(vsync == SDL_FALSE && frameRate > elapsed)
+			SDL_Delay(frameRate - elapsed);
 
 		// remember now as the starting point for the next frame
 		lastFrame = SDL_GetTicks();
