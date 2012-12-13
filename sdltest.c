@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   }
 
 	Uint32 flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-	if(argc > 1 && strcmp(argv[1], "-novsync"))
+	if(argc > 1 && strcmp(argv[1], "-novsync") == 0)
 		flags &= ~SDL_RENDERER_PRESENTVSYNC;
 
 	SDL_Window *window = SDL_CreateWindow(argv[0], SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
