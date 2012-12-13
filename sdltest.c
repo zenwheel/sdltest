@@ -30,8 +30,12 @@ int main(int argc, char **argv) {
   }
 
 	Uint32 flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-	if(argc > 1 && strncmp(argv[1], "-novsync", 8) == 0) {
-		flags &= ~SDL_RENDERER_PRESENTVSYNC;
+	if(argc > 1) {
+		if(strncmp(argv[1], "-novsync", 8) == 0)
+			flags &= ~SDL_RENDERER_PRESENTVSYNC;
+		if(strcmp(argv[1], "-software") == 0)
+			flags = SDL_RENDERER_SOFTWARE;
+
 		char *n = strchr(argv[1], '=');
 		if(n) {
 			n++;
