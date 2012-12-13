@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	if(argc > 1) {
 		if(strncmp(argv[1], "-novsync", 8) == 0)
 			flags &= ~SDL_RENDERER_PRESENTVSYNC;
-		if(strcmp(argv[1], "-software") == 0)
+		if(strncmp(argv[1], "-software", 9) == 0)
 			flags = SDL_RENDERER_SOFTWARE;
 
 		char *n = strchr(argv[1], '=');
