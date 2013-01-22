@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include "utc_time.h"
 
 #define BASE_FRAME_RATE_MS 16
 
@@ -79,6 +80,9 @@ int main(int argc, char **argv) {
 	char tmp[64];
 	int delta = 1;
 	int position = 0;
+	struct timespec lastFrameT;
+	lastFrameT.tv_sec = 0;
+	lastFrameT.tv_nsec = 0;
 	while(m_run) {
 		while(SDL_PollEvent(&event)) {
 			switch (event.type) {
@@ -95,6 +99,12 @@ int main(int argc, char **argv) {
 		}
 
 		Uint32 start = SDL_GetTicks();
+		struct timespec startT;
+
+		if(lastFrameT.tv_sec == 0 && lastFrameT.tv_nsec == 0)
+			current_utc_time(&startT);
+		else
+			startT = lastFrameT;
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
 		SDL_RenderClear(renderer);
@@ -125,19 +135,38 @@ int main(int argc, char **argv) {
 		SDL_RenderPresent(renderer);
 
 		Uint32 end = SDL_GetTicks();
+		struct timespec endT;
+		current_utc_time(&endT);
 		Uint32 elapsed = end - lastFrame;
 
+		struct timespec baseRateT;
+		struct timespec elapsedT;
+		baseRateT.tv_sec = 0;
+		baseRateT.tv_nsec = 1000000 * frameRate;
+
+
 		// delay for the remainder of the base rate so we keep a decent frame rate if there's no vsync
-		if(vsync == SDL_FALSE && frameRate > elapsed)
-			SDL_Delay(frameRate - elapsed);
+		if(vsync == SDL_FALSE && frameRate > elapsed) {
+			//SDL_Delay(frameRate - elapsed);
+			delta_t(&elapsedT, &startT, &endT);
+			//printf("Elapsed %ld %ld ns\n", elapsedT.tv_sec, elapsedT.tv_nsec);
+			//printf("Base rate %ld %ld ns\n", baseRateT.tv_sec, baseRateT.tv_nsec);
+			struct timespec delayT;
+			delta_t(&delayT, &elapsedT, &baseRateT);
+
+			//printf("Delaying %ld %ld ns\n", delayT.tv_sec, delayT.tv_nsec);
+			nanosleep(&delayT, 0);
+		}
 
 		// remember now as the starting point for the next frame
 		lastFrame = SDL_GetTicks();
+		current_utc_time(&lastFrameT);
 
 		// update statistics
+		delta_t(&elapsedT, &startT, &lastFrameT);
 		elapsed = lastFrame - start;
-		fps = 1000.0f / (float)elapsed;
-		printf("Current frame rate is %6.3f fps (%ums)              \r", fps, elapsed);
+		fps = 1000000000.0f / (float)elapsedT.tv_nsec;
+		printf("Current frame rate is %6.3f fps (%ldns)              \r", fps, elapsedT.tv_nsec);
 	}
 	printf("\n");
 
