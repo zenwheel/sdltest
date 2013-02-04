@@ -131,13 +131,16 @@ int main(int argc, char **argv) {
 		if(vsync == SDL_FALSE && frameRate > elapsed)
 			SDL_Delay(frameRate - elapsed);
 
+		if(elapsed > frameRate * 3)
+			printf("Frame took %ums\n", elapsed);
+
 		// remember now as the starting point for the next frame
 		lastFrame = SDL_GetTicks();
 
 		// update statistics
 		elapsed = lastFrame - start;
 		fps = 1000.0f / (float)elapsed;
-		printf("Current frame rate is %6.3f fps (%ums)              \r", fps, elapsed);
+		//printf("Current frame rate is %6.3f fps (%ums)              \r", fps, elapsed);
 	}
 	printf("\n");
 
