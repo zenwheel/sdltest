@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <time.h>
+#include <sys/timeb.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -131,8 +133,17 @@ int main(int argc, char **argv) {
 		if(vsync == SDL_FALSE && frameRate > elapsed)
 			SDL_Delay(frameRate - elapsed);
 
-		if(elapsed > frameRate * 3)
-			printf("Frame took %ums\n", elapsed);
+		if(elapsed > frameRate * 3) {
+			struct timeb tp;
+			ftime(&tp);
+			time_t now;
+			struct tm *ti;
+			char buf[255];
+			time(&now);
+			ti = localtime(&now);
+			strftime(buf, sizeof(buf), "%I:%M:%S", ti);
+			printf("%s.%d: Frame took %ums\n", buf, tp.millitm, elapsed);
+		}
 
 		// remember now as the starting point for the next frame
 		lastFrame = SDL_GetTicks();
