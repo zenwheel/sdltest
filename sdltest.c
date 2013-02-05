@@ -1,10 +1,37 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <sys/timeb.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
 
 #define BASE_FRAME_RATE_MS 16
+
+#define DRI_PATH "/proc/dri/0/name"
+
+int GetIntelOffset() {
+  int result = 0;
+  struct stat statbuf;
+  int res = stat(DRI_PATH, &statbuf);
+  if(res == -1 || !S_ISREG(statbuf.st_mode))
+    return result;
+
+  FILE *f = fopen(DRI_PATH, "r");
+  if(f) {
+    char buf[255];
+    if(fgets(buf, sizeof(buf), f)) {
+      char *p = strchr(buf, ' ');
+      if(p) *p = 0;
+      printf("Graphics hardware is '%s'\n", buf);
+      if(!strcmp(buf, "i915"))
+        result++;
+    }
+    fclose(f);
+  }
+
+  return result;
+}
 
 int main(int argc, char **argv) {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -45,7 +72,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	SDL_Window *window = SDL_CreateWindow(argv[0], SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width + 1, height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
+	SDL_Window *window = SDL_CreateWindow(argv[0], SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width + GetIntelOffset(), height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, flags);
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
