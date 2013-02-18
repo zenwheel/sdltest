@@ -44,10 +44,13 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-  SDL_DisplayMode current;
   int width = 800;
   int height = 600;
   Uint32 frameRate = BASE_FRAME_RATE_MS;
+  SDL_bool vsync = SDL_FALSE;
+
+#if SDL_MAJOR_VERSION == 2
+  SDL_DisplayMode current;
   for(int i = 0; i < SDL_GetNumVideoDisplays(); ++i){
     if(SDL_GetCurrentDisplayMode(i, &current) != 0)
 			fprintf(stderr, "Couldn't get display mode: %s\n", SDL_GetError());
@@ -79,7 +82,6 @@ int main(int argc, char **argv) {
 	SDL_DisableScreenSaver();
 
 	SDL_RendererInfo info;
-	SDL_bool vsync = SDL_FALSE;
 	if(SDL_GetRendererInfo(renderer, &info) == 0) {
 		printf("Using video driver: %s with renderer %s\n", SDL_GetCurrentVideoDriver(), info.name);
 		if(info.flags & SDL_RENDERER_SOFTWARE)
@@ -93,6 +95,29 @@ int main(int argc, char **argv) {
 		if(info.flags & SDL_RENDERER_TARGETTEXTURE)
 			printf("*** Using SDL_RENDERER_TARGETTEXTURE\n");
 	}
+#else
+  const SDL_VideoInfo *pVideoInfo = SDL_GetVideoInfo();
+  if(pVideoInfo == 0) {
+    fprintf(stderr, "Couldn't get display information: %s\n", SDL_GetError());
+    exit(1);
+  }
+  printf("Display is %dx%d\n", pVideoInfo->current_w, pVideoInfo->current_h);
+  width = pVideoInfo->current_w;
+  height = pVideoInfo->current_h;
+
+  SDL_Surface *screen = screen = SDL_SetVideoMode(width, height,
+    //pVideoInfo->current_w, pVideoInfo->current_h,
+    pVideoInfo->vfmt->BitsPerPixel, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+  if(screen == 0) {
+    fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
+    exit(1);
+  }
+
+  SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_ShowCursor(SDL_DISABLE);
+
+#endif
 
 	TTF_Font *font = TTF_OpenFont("AlteHaasGroteskBold.ttf", 60);
 	if(font == 0) {
@@ -125,33 +150,48 @@ int main(int argc, char **argv) {
 
 		Uint32 start = SDL_GetTicks();
 
+#if SDL_MAJOR_VERSION == 2
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
 		SDL_RenderClear(renderer);
+#else
+    SDL_FillRect(screen, 0, 0);
+#endif
 
 		snprintf(tmp, sizeof(tmp), "Current fps = %.1f", fps);
 		SDL_Surface *textSurface = TTF_RenderText_Solid(font, tmp, foregroundColor);
 
 		if(textSurface) {
+#if SDL_MAJOR_VERSION == 2
 			SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+#endif
 
 			SDL_Rect location;
 			location.h = textSurface->h;
 			location.w = textSurface->w;
 			location.x = position;
 			location.y = height / 2 - textSurface->h / 2;
+#if SDL_MAJOR_VERSION == 1
+      SDL_BlitSurface(textSurface, 0, screen, &location);
+#endif
 			SDL_FreeSurface(textSurface);
 
 			position += delta;
 			if(position >= width - textSurface->w || position <= 0)
 				delta *= -1;
 
+#if SDL_MAJOR_VERSION == 2
 			if(textTexture) {
 				SDL_RenderCopy(renderer, textTexture, 0, &location);
 				SDL_DestroyTexture(textTexture);
 			}
+#endif
 		}
 
+#if SDL_MAJOR_VERSION == 2
 		SDL_RenderPresent(renderer);
+#else
+    SDL_Flip(screen);
+#endif
 
 		Uint32 end = SDL_GetTicks();
 		Uint32 elapsed = end - lastFrame;
@@ -183,8 +223,12 @@ int main(int argc, char **argv) {
 	printf("\n");
 
 cleanup:
+#if SDL_MAJOR_VERSION == 2
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
+#else
+  SDL_FreeSurface(screen);
+#endif
 	TTF_Quit();
 	SDL_Quit();
 
