@@ -105,9 +105,7 @@ int main(int argc, char **argv) {
   width = pVideoInfo->current_w;
   height = pVideoInfo->current_h;
 
-  SDL_Surface *screen = screen = SDL_SetVideoMode(width, height,
-    //pVideoInfo->current_w, pVideoInfo->current_h,
-    pVideoInfo->vfmt->BitsPerPixel, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+  SDL_Surface *screen = SDL_SetVideoMode(width, height, pVideoInfo->vfmt->BitsPerPixel, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
   if(screen == 0) {
     fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
     exit(1);
